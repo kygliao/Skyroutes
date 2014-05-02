@@ -5,6 +5,14 @@ examples/empty/Skyroutes/bin/
 examples/empty/Skyroutes/obj/
 examples/empty/Skyroutes/Makefile/
 
+*.sdf
+*.sln
+*.suo
+*.filters
+*.user
+*.rc
+*.vcxproj
+
 *.cpb
 *.make
 *.workspace
