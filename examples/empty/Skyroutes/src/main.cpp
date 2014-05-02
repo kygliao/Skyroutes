@@ -1,5 +1,7 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "CompFab.h"
+#include "Mesh.h"
 
 //========================================================================
 int main( ){
