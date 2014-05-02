@@ -1,9 +1,12 @@
 libs/
 export/
 scripts/
+docs/
+other/
 examples/empty/Skyroutes/bin/
 examples/empty/Skyroutes/obj/
-examples/empty/Skyroutes/Makefile/
+examples/empty/Skyroutes/Makefile
+examples/utils/
 
 *.cpb
 *.make
@@ -14,6 +17,9 @@ examples/empty/Skyroutes/Makefile/
 *.lo
 *.o
 *.obj
+*.xcodeproj
+*.xcconfig
+*.plist
 
 # Compiled Dynamic libraries
 *.so
