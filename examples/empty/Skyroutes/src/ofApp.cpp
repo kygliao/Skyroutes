@@ -1,5 +1,6 @@
 #include "ofApp.h"
 
+
 int valx;
 int valy;
 int valz;

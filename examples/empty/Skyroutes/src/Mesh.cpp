@@ -323,7 +323,7 @@ void Mesh::load_mesh(const char * filename, bool normalize)
   if(normalize){
     rescale();
   }
-  compute_norm();
+  //compute_norm();
 
   f.close();
 }
