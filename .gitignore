@@ -4,6 +4,7 @@ docs/
 other/
 examples/empty/Skyroutes/bin/
 examples/empty/Skyroutes/obj/
+examples/empty/Skyroutes/data/output/
 examples/empty/Skyroutes/Makefile
 examples/utils/
 
@@ -23,7 +24,6 @@ examples/utils/
 *.slo
 *.lo
 *.o
-*.obj
 *.xcodeproj
 *.xcconfig
 *.plist
