@@ -12,8 +12,12 @@ public:
   std::vector<CompFab::Vec3>n;
   std::vector<CompFab::Vec2f>tex;
   std::vector<CompFab::Vec3i>texId;
-  ///@brief triangles
   std::vector<CompFab::Vec3i>t;
+  // Number of objects
+  unsigned int numObj;
+  // Stores for each obj the index in t of the first triangle in the obj
+  std::vector<unsigned int> objTriangleMap;
+  ///@brief triangles
 
   Mesh();
   Mesh(const std::vector<CompFab::Vec3>&_v,
