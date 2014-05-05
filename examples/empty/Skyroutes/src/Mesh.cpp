@@ -155,6 +155,7 @@ void Mesh::read_obj(std::istream & f)
   std::string line;
   std::string vTok("v");
   std::string fTok("f");
+  std::string oTok("o");
   std::string texTok("vt");
   char bslash='/',space=' ';
   std::string tok;
@@ -213,9 +214,15 @@ void Mesh::read_obj(std::istream & f)
         ss>>texcoord[0];
         ss>>texcoord[1];
         tex.push_back(texcoord);
+    // At each new obj, update numObj and store start index of triangles for new obj 
+    } else if(tok==oTok) {
+        numObj += 1; 
+        objTriangleMap.push_back(t.size());
     }
   }
-  std::cout<<"Num Triangles: "<< t.size()<<"\n";
+  objTriangleMap.push_back(t.size());
+  std::cout<<"Num Triangles: " << t.size()<<"\n";
+  std::cout<<"Num Objs: " << numObj <<"\n";
 }
 
 void Mesh::read_ply(std::istream & f)
@@ -295,7 +302,7 @@ void Mesh::save_obj(const char * filename)
 
 void Mesh::update()
 {}
-
+// This is the method called to load the building meshes
 Mesh::Mesh(const char * filename,bool normalize)
 {
   load_mesh(filename,normalize);

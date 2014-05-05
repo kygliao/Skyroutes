@@ -26,7 +26,8 @@ CompFab::VoxelGrid *g_voxelGrid;
 
 // Triangles used for initializing labels;
 typedef std::vector<CompFab::Triangle> TriangleList;
-TriangleList g_voxelTriangles;
+//TriangleList g_voxelTriangles;
+std::vector<TriangleList> g_buildingTriangles;
 unsigned int voxelRes;
 
 double detMat(double A11, double A12, double A13,
@@ -81,21 +82,31 @@ int rayTriangleIntersection(CompFab::Ray &ray, CompFab::Triangle &triangle)
   Num Intersections with Ray
   @returns number of intersections with surface made by a ray originating at voxel and cast in direction.
 */
-int numSurfaceIntersections(CompFab::Vec3 &voxelPos, CompFab::Vec3 &dir)
+int testBuildingIntersect(CompFab::Vec3 &voxelPos, CompFab::Vec3 &dir)
 {
     
     unsigned int numHits = 0;
+    TriangleList g_triangles;
     /********* ASSIGNMENT *********/
     /* Check and return the number of times a ray cast in direction dir, 
      * from voxel center voxelPos intersects the surface */
     CompFab::RayStruct vRay = CompFab::RayStruct(voxelPos, dir);
-    for(unsigned int i = 0; i < g_voxelTriangles.size(); i++){
-        CompFab::Triangle triangle = g_voxelTriangles[i];
-        if(rayTriangleIntersection(vRay, triangle) == 1){
-            numHits ++;
+    for(unsigned int n = 0; n < g_buildingTriangles.size(); n++){
+        g_triangles = g_buildingTriangles[n];
+        for(unsigned int i = 0; i < g_triangles.size(); i++){
+            CompFab::Triangle triangle = g_triangles[i];
+            if(rayTriangleIntersection(vRay, triangle) == 1){
+                numHits ++;
+            }
         }
+        // Intersection with building, return building num
+        if(numHits % 2 != 0){
+            return n+1;
+        }
+        numHits = 0;
     }
-    return numHits;
+    // No intersections
+    return 0;
 }
 
 /*
@@ -104,19 +115,26 @@ int numSurfaceIntersections(CompFab::Vec3 &voxelPos, CompFab::Vec3 &dir)
 */
 bool loadMesh(char *filename, unsigned int dim)
 {
-    g_voxelTriangles.clear();
+    g_buildingTriangles.clear();
     
     Mesh *tempMesh = new Mesh(filename, true);
     
     CompFab::Vec3 v1,v2,v3;
 
-    //copy triangles to global list
-    for(unsigned int tri =0; tri<tempMesh->t.size(); ++tri)
-    {
-        v1 = tempMesh->v[tempMesh->t[tri][0]];
-        v2 = tempMesh->v[tempMesh->t[tri][1]];
-        v3 = tempMesh->v[tempMesh->t[tri][2]];
-        g_voxelTriangles.push_back(CompFab::Triangle(v1,v2,v3));
+    unsigned int currI, nextI;
+    TriangleList g_objTriangles;
+    for(unsigned int objTriI = 0; objTriI <tempMesh->objTriangleMap.size()-1; objTriI++){
+        currI = tempMesh->objTriangleMap[objTriI];
+        nextI = tempMesh->objTriangleMap[objTriI+1];
+        for(unsigned int tri = currI; tri<nextI; ++tri)
+        {
+            v1 = tempMesh->v[tempMesh->t[tri][0]];
+            v2 = tempMesh->v[tempMesh->t[tri][1]];
+            v3 = tempMesh->v[tempMesh->t[tri][2]];
+            g_objTriangles.push_back(CompFab::Triangle(v1,v2,v3));
+        }
+        g_buildingTriangles.push_back(g_objTriangles);
+        g_objTriangles.clear();
     }
 
     //Create Voxel Grid
@@ -150,7 +168,7 @@ bool loadMesh(char *filename, unsigned int dim)
 /*
   Convert the voxel representation of the grid into a mesh for saving to file or render.
 */
-void triangulateVoxelGrid(const char * outfile)
+void triangulateVoxelGrid(const char * outfile, int label)
 {
     cout << "Trianglulating\n";
 
@@ -166,7 +184,8 @@ void triangulateVoxelGrid(const char * outfile)
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                if(!g_voxelGrid->getLabel(ii,jj,kk)){
+                if(!g_voxelGrid->getLabel(ii,jj,kk) || 
+                    (g_voxelGrid->getLabel(ii,jj,kk) != label)){
                   continue;
                 }
                 CompFab::Vec3 coord(((double)ii)*spacing, ((double)jj)*spacing, ((double)kk)*spacing);
@@ -178,7 +197,7 @@ void triangulateVoxelGrid(const char * outfile)
         }
     }
     // Compute the normals
-    //mout.compute_norm();
+    mout.compute_norm();
     mout.save_obj(outfile);
 }
 
@@ -187,13 +206,18 @@ void triangulateVoxelGrid(const char * outfile)
   @sets g_voxelgrid
   TODO: do this for multiple objects
 */
-void voxelizer(char* filename, char* outfilename, unsigned int voxelres) 
+void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigned int label) 
 {
 
     unsigned int dim = voxelres; //dimension of voxel grid (e.g. 32x32x32)
 
-    // Construct the voxel grid, populate g_voxelTriangles - used in ray tracing for labeling in rest of function
+    // Construct the voxel grid, populate g_buildingTriangles - used in ray tracing for labeling in rest of function
     loadMesh(filename, dim);
+
+    if(label < 1 || label > g_buildingTriangles.size()) {
+        std::cout<< "debug label invalid, number of buildings is :" << g_buildingTriangles.size() << "\n";
+        exit(0);
+    }
 
     // Assign voxel labels for buildings 
     //TODO: Only works if no triangles at 10,0,0, needs debug
@@ -204,25 +228,27 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres)
     int nz = g_voxelGrid->m_dimZ;
     double spacing = g_voxelGrid->m_spacing;
     CompFab::Vec3 left = g_voxelGrid->m_lowerLeft;
+    int bIntersect = 0;
     cout << "m_lowerleft" << left.m_x << "," << left.m_y << "," << left.m_z;
     
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
     
     // Iterate over all voxels in g_voxelGrid and test whether they are inside our outside 
-    // of the  surface defined by the input building mesh
+    // of the  surface defined by the each input building mesh
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
-                if(numSurfaceIntersections(vPos, direction) % 2 != 0){
-                    g_voxelGrid->getLabel(ii,jj,kk) = 1;
+                bIntersect = testBuildingIntersect(vPos, direction);
+                if(bIntersect){
+                    g_voxelGrid->getLabel(ii,jj,kk) = bIntersect;
                 }
             }
         }
     }
 
-    // For testing: converts grid representation to a mesh file with voxelized buildings (file will show blocks where getLabel == 1)
-    triangulateVoxelGrid(outfilename);
+    // For testing: converts grid representation to a mesh file with voxelized buildings (file will show blocks where getLabel >= 1)
+    triangulateVoxelGrid(outfilename, label);
     cout << "Done \n";
 }
 
@@ -240,18 +266,24 @@ int main(int argc, char **argv)
 
     if(argc < 4)
     {
-        std::cout<<"Usage: InputMeshFilename OutputMeshFilename voxelRes\n";
+        std::cout<<"Usage: InputMeshFilename OutputMeshFilename voxelRes building\n";
         exit(0);
     }
     std::cout<<"Load Mesh file: "<<argv[1]<<"\n";
-    std::cout<<"Output Mesh file: "<<argv[1]<<"\n";
+    std::cout<<"Output Mesh file: "<<argv[2]<<"\n";
     std::cout<<"Grid resolution : "<<argv[3]<<"\n";
+
+    int debugLabel = 1;
+    if(argc == 5) {
+        std::cout<<"Building label : "<<argv[4]<<"\n";
+        debugLabel = atoi(argv[4]);
+    }
 
     voxelRes = atoi(argv[3]);
 
     // Create the grid, set "getLabel" for initial inputfile 
     // TODO: do this for multiple files
-    voxelizer(argv[1], argv[2], voxelRes);
+    voxelizer(argv[1], argv[2], voxelRes, debugLabel);
 
 	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
