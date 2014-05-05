@@ -8,6 +8,7 @@ examples/empty/Skyroutes/data/output/
 examples/empty/Skyroutes/Makefile
 examples/utils/
 
+*.swp
 *.sdf
 *.sln
 *.suo

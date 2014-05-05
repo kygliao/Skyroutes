@@ -166,7 +166,7 @@ void triangulateVoxelGrid(const char * outfile)
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                if(!g_voxelGrid->isInside(ii,jj,kk)){
+                if(!g_voxelGrid->getLabel(ii,jj,kk)){
                   continue;
                 }
                 CompFab::Vec3 coord(((double)ii)*spacing, ((double)jj)*spacing, ((double)kk)*spacing);
@@ -196,8 +196,8 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres)
     loadMesh(filename, dim);
 
     // Assign voxel labels for buildings 
-    //TODO: Only works if no triangles at 0,0,0
-    CompFab::Vec3 direction(0.0,0.0,0.0);
+    //TODO: Only works if no triangles at 10,0,0, needs debug
+    CompFab::Vec3 direction(10.0,0.0,0.0);
 
     int nx = g_voxelGrid->m_dimX;
     int ny = g_voxelGrid->m_dimY;
@@ -215,13 +215,13 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres)
             for (int kk = 0; kk < nz; kk++) {
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
                 if(numSurfaceIntersections(vPos, direction) % 2 != 0){
-                    g_voxelGrid->isInside(ii,jj,kk) = 1;
+                    g_voxelGrid->getLabel(ii,jj,kk) = 1;
                 }
             }
         }
     }
 
-    // For testing: converts grid representation to a mesh file with voxelized buildings (file will show blocks where isInside == 1)
+    // For testing: converts grid representation to a mesh file with voxelized buildings (file will show blocks where getLabel == 1)
     triangulateVoxelGrid(outfilename);
     cout << "Done \n";
 }
@@ -249,15 +249,15 @@ int main(int argc, char **argv)
 
     voxelRes = atoi(argv[3]);
 
-    // Create the grid, set "isInside" for initial inputfile 
+    // Create the grid, set "getLabel" for initial inputfile 
     // TODO: do this for multiple files
     voxelizer(argv[1], argv[2], voxelRes);
 
-	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
+	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
-	ofRunApp( new ofApp());
+	//ofRunApp( new ofApp());
 
 }
 
