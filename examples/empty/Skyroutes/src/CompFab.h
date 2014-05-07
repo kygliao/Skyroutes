@@ -12,6 +12,9 @@
 #define EPSILON 1e-9
 
 #include <cmath>
+#include <queue>
+#include <vector>
+#include <utility>
 
 namespace CompFab
 {
@@ -110,8 +113,24 @@ namespace CompFab
     
     //Dot Product
     double operator*(const Vec3 &v1, const Vec3 &v2);
+
     
+    class CompareVoxel
+    {
+    public:
+        bool operator()(std::pair<Vec3,Vec3> n1,std::pair<Vec3,Vec3> n2)
+        {
+          double distn1 = sqrt(pow((n1.first.m_x + n1.second.m_x),2) + 
+                               pow((n1.first.m_y + n1.second.m_y),2) + 
+                               pow((n1.first.m_z + n1.second.m_z),2));
+
+          double distn2 = sqrt(pow((n2.first.m_x + n2.second.m_x),2) + 
+                               pow((n2.first.m_y + n2.second.m_y),2) + 
+                               pow((n2.first.m_z + n2.second.m_z),2));
     
+          return (distn1<=distn2);
+        }
+    }; 
     //Grid structure for Voxels
     typedef struct VoxelGridStruct
     {
@@ -126,6 +145,7 @@ namespace CompFab
         }
         
         unsigned int *m_labelArray;
+        std::priority_queue< std::pair<Vec3, Vec3>, std::vector<std::pair<Vec3,Vec3> >, CompareVoxel> wavefront;
         unsigned int m_dimX, m_dimY, m_dimZ, m_size;
         double m_spacing;
         Vec3 m_lowerLeft;

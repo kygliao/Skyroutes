@@ -132,7 +132,7 @@ CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, uns
     m_size = dimX*dimY*dimZ;
     m_spacing = spacing;
     
-    //  Allocate Memory for labels array: 0 = UNLABELED, otw building id
+    //  Allocate Memory for wavefront Q: 0 = UNLABELED, otw building id
     m_labelArray = new unsigned int[m_size];
     
     for(unsigned int ii=0; ii<m_size; ++ii)

@@ -45,9 +45,9 @@ double detMat(double A11, double A12, double A13,
 
 /*
   Ray-Triangle Intersection
-  @returns 1 if triangle and ray intersect, 0 otherwise
+  @returns distance if triangle and ray intersect, 0 otherwise
 */
-int rayTriangleIntersection(CompFab::Ray &ray, CompFab::Triangle &triangle)
+float rayTriangleIntersection(CompFab::Ray &ray, CompFab::Triangle &triangle)
 {
     CompFab::Vec3 e1(triangle.m_v2 - triangle.m_v1);
     CompFab::Vec3 e2(triangle.m_v3 - triangle.m_v1);
@@ -74,7 +74,7 @@ int rayTriangleIntersection(CompFab::Ray &ray, CompFab::Triangle &triangle)
     if( t <= 0.0 ){
       return 0;
     }
-    return 1;
+    return (float)t;
 
 }
 
@@ -82,31 +82,34 @@ int rayTriangleIntersection(CompFab::Ray &ray, CompFab::Triangle &triangle)
   Num Intersections with Ray
   @returns number of intersections with surface made by a ray originating at voxel and cast in direction.
 */
-int testBuildingIntersect(CompFab::Vec3 &voxelPos, CompFab::Vec3 &dir)
+void testBuildingIntersect(CompFab::Vec3 &voxelPos, CompFab::Vec3 &dir, int *result)
 {
     
     unsigned int numHits = 0;
+    float dist;
     TriangleList g_triangles;
-    /********* ASSIGNMENT *********/
-    /* Check and return the number of times a ray cast in direction dir, 
-     * from voxel center voxelPos intersects the surface */
+
     CompFab::RayStruct vRay = CompFab::RayStruct(voxelPos, dir);
     for(unsigned int n = 0; n < g_buildingTriangles.size(); n++){
         g_triangles = g_buildingTriangles[n];
         for(unsigned int i = 0; i < g_triangles.size(); i++){
             CompFab::Triangle triangle = g_triangles[i];
-            if(rayTriangleIntersection(vRay, triangle) == 1){
+            dist = rayTriangleIntersection(vRay, triangle);
+            if(dist){
                 numHits ++;
             }
         }
         // Intersection with building, return building num
         if(numHits % 2 != 0){
-            return n+1;
+            result[0] = n+1;
+            // Check if voxel is on boundary - wavefront
+            return;
         }
         numHits = 0;
     }
     // No intersections
-    return 0;
+    result[0] = 0;
+    return;
 }
 
 /*
@@ -228,7 +231,7 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
     int nz = g_voxelGrid->m_dimZ;
     double spacing = g_voxelGrid->m_spacing;
     CompFab::Vec3 left = g_voxelGrid->m_lowerLeft;
-    int bIntersect = 0;
+    int bIntersect[2];
     cout << "m_lowerleft" << left.m_x << "," << left.m_y << "," << left.m_z;
     
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
@@ -239,9 +242,9 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
-                bIntersect = testBuildingIntersect(vPos, direction);
-                if(bIntersect){
-                    g_voxelGrid->getLabel(ii,jj,kk) = bIntersect;
+                testBuildingIntersect(vPos, direction, bIntersect);
+                if(bIntersect[0]){
+                    g_voxelGrid->getLabel(ii,jj,kk) = bIntersect[0];
                 }
             }
         }
@@ -250,6 +253,36 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
     // For testing: converts grid representation to a mesh file with voxelized buildings (file will show blocks where getLabel >= 1)
     triangulateVoxelGrid(outfilename, label);
     cout << "Done \n";
+}
+void initializeWF(){
+    int nx = g_voxelGrid->m_dimX;
+    int ny = g_voxelGrid->m_dimY;
+    int nz = g_voxelGrid->m_dimZ;
+
+    std::pair <CompFab::Vec3,CompFab::Vec3> voxel;
+    for (int ii = 0; ii < nx; ii++) {
+        for (int jj = 0; jj < ny; jj++) {
+            for (int kk = 0; kk < nz; kk++) {
+                if(g_voxelGrid->getLabel(ii,jj,kk)){
+                   voxel = std::make_pair(CompFab::Vec3(ii, jj, kk),CompFab::Vec3(ii, jj, kk));
+                   g_voxelGrid->wavefront.push(voxel);
+                }
+            }
+        }
+    }
+
+
+}
+///////////////
+// PROPAGATE //
+///////////////
+void propagate(){
+   //while(!wavefront.empty()){
+
+
+
+
+   //}
 }
 
 ///////////////
@@ -284,6 +317,8 @@ int main(int argc, char **argv)
     // Create the grid, set "getLabel" for initial inputfile 
     // TODO: do this for multiple files
     voxelizer(argv[1], argv[2], voxelRes, debugLabel);
+    initializeWF();
+    propagate();
 
 	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
