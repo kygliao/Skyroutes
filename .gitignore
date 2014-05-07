@@ -19,6 +19,8 @@ examples/utils/
 *.vcxproj
 *.md
 
+*.DS_Store
+
 *.cpb
 *.make
 *.workspace
