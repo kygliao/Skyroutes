@@ -275,7 +275,7 @@ void initializeWF(){
 
 bool areCoordinatesValid(double x, double y, double z)
 {
-    return ;
+    return true;
 }
 
 //void printWavefront()
@@ -308,35 +308,41 @@ void propagate(){
        CompFab::Vec3 parent = voxelPair.second;
        g_voxelGrid->wavefront.pop();
        
-       std::cout << "voxel " << voxel.m_x << " " << voxel.m_y << " " << voxel.m_z << " has label " << g_voxelGrid->getLabel(voxel.m_x, voxel.m_y, voxel.m_z) << "\n";
+       int curr_label = g_voxelGrid->getLabel(voxel.m_x, voxel.m_y, voxel.m_z);
+       std::cout << "Curr Voxel: " << voxel.m_x << " " << voxel.m_y << " " << voxel.m_z << " has label " <<  curr_label << "\n";
        for(int i = -1; i <=1; i++)
        {
            for(int j = -1; j <=1; j++)
            {
                for(int k = -1; k <=1; k++)
                {
+                   int n_x = (unsigned int)voxel.m_x + i;
+                   int n_y = (unsigned int)voxel.m_x + j;
+                   int n_z = (unsigned int)voxel.m_x + k;
+
+                   std::cout << "Voxel neighbor: " << n_x << " " << n_y << " " << n_z << "\n";
+
                    //If same square as before don't propegate
                    if(!(i == 0 and j == 0 and k == 0))
                    {
                        //Check if coordinates are valid
-                       if(voxel.m_x + i >= 0 and voxel.m_x + i <= g_voxelGrid->m_dimX and voxel.m_y + j >= 0 and voxel.m_y + j <= g_voxelGrid->m_dimY and voxel.m_z + k >= 0 and voxel.m_z + k <= g_voxelGrid->m_dimZ)
+                       if( n_x >= 0 and n_x < g_voxelGrid->m_dimX and n_y >= 0 and n_y <= g_voxelGrid->m_dimY and n_z >= 0 and n_z < g_voxelGrid->m_dimZ)
                        {
+                           int n_label = g_voxelGrid->getLabel(n_x, n_y, n_z);
+                           std::cout << "Voxel neighbor original label: " << n_label << "\n";
                            //Check if unlabelled
-                           if(g_voxelGrid->getLabel((unsigned int)(voxel.m_x + i), (unsigned int)(voxel.m_y + j), (unsigned int)(voxel.m_z + k)) == 0)
+                           if(g_voxelGrid->getLabel(n_x, n_y, n_z) == 0)
                            {
-                               std::cout << "label was " << g_voxelGrid->getLabel((unsigned int)(voxel.m_x + i), (unsigned int)(voxel.m_y + j), (unsigned int)(voxel.m_z + k)) << "\n";
+                               std::cout << "Valid: ";
                                //Assign it the new label
-                               g_voxelGrid->getLabel((unsigned int)(voxel.m_x + i), (unsigned int)(voxel.m_y + j), (unsigned int)(voxel.m_z + k)) = g_voxelGrid->getLabel((unsigned int)voxel.m_x, (unsigned int)voxel.m_y, (unsigned int)voxel.m_z);
-                               std::cout << "setting label to " << g_voxelGrid->getLabel((unsigned int)(voxel.m_x + i), (unsigned int)(voxel.m_y + j), (unsigned int)(voxel.m_z + k)) << "\n";
+                               g_voxelGrid->getLabel(n_x,n_y,n_z) = curr_label;
+                               std::cout << "setting label to " << curr_label << "\n";
                                std::pair <CompFab::Vec3,CompFab::Vec3> newVoxel;
-                               newVoxel = std::make_pair(CompFab::Vec3(voxel.m_x + i, voxel.m_y + j, voxel.m_z + k),parent);
+                               newVoxel = std::make_pair(CompFab::Vec3(n_x, n_y, n_z), parent);
                                g_voxelGrid->wavefront.push(newVoxel);
                            }
-                           //If already labelled and we try to label - on diagram
-                           else
-                           {
-                               diagram.push_back(voxel);
-                           }
+                       } else {
+                         std::cout << "Invalid" << "\n";
                        }
                    }
                }
