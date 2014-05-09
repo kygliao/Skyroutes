@@ -6,6 +6,8 @@
 #include <fstream>
 #include "CompFab.h"
 
+extern CompFab::VoxelGrid *g_voxelGrid;
+
 class Mesh{
 public:
   std::vector<CompFab::Vec3>v;

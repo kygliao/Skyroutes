@@ -9,7 +9,7 @@
 #include "ofMain.h"
 #include "ofApp.h"
 #include "CompFab.h"
-#include "Mesh.h"
+//#include "Mesh.h"
 #include "vecmath/vecmath.h"
 using namespace std;
 using std::stringstream;
@@ -36,6 +36,9 @@ double detMat(double A11, double A12, double A13,
 {
     return A11*(A22*A33 - A23*A32) - A12*(A21*A33 - A23*A31) + A13*(A21*A32 - A22*A31);
 }
+
+// Kai's mesh rendering stuff
+Mesh *rMesh;
 
 
 ////////////////////
@@ -120,29 +123,30 @@ bool loadMesh(char *filename, unsigned int dim)
 {
     g_buildingTriangles.clear();
     
-    Mesh *tempMesh = new Mesh(filename, true);
+    //rMesh = new Mesh(filename, true);
+    rMesh = new Mesh(filename, false);
     
     CompFab::Vec3 v1,v2,v3;
-
+    
     unsigned int currI, nextI;
     TriangleList g_objTriangles;
-    for(unsigned int objTriI = 0; objTriI <tempMesh->objTriangleMap.size()-1; objTriI++){
-        currI = tempMesh->objTriangleMap[objTriI];
-        nextI = tempMesh->objTriangleMap[objTriI+1];
+    for(unsigned int objTriI = 0; objTriI <rMesh->objTriangleMap.size()-1; objTriI++){
+        currI = rMesh->objTriangleMap[objTriI];
+        nextI = rMesh->objTriangleMap[objTriI+1];
         for(unsigned int tri = currI; tri<nextI; ++tri)
         {
-            v1 = tempMesh->v[tempMesh->t[tri][0]];
-            v2 = tempMesh->v[tempMesh->t[tri][1]];
-            v3 = tempMesh->v[tempMesh->t[tri][2]];
+            v1 = rMesh->v[rMesh->t[tri][0]];
+            v2 = rMesh->v[rMesh->t[tri][1]];
+            v3 = rMesh->v[rMesh->t[tri][2]];
             g_objTriangles.push_back(CompFab::Triangle(v1,v2,v3));
         }
         g_buildingTriangles.push_back(g_objTriangles);
         g_objTriangles.clear();
     }
-
+    
     //Create Voxel Grid
     CompFab::Vec3 bbMax, bbMin;
-    BBox(*tempMesh, bbMin, bbMax);
+    BBox(*rMesh, bbMin, bbMax);
     
     //Build Voxel Grid
     double bbX = bbMax[0] - bbMin[0];
@@ -162,11 +166,12 @@ bool loadMesh(char *filename, unsigned int dim)
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
     
     g_voxelGrid = new CompFab::VoxelGrid(bbMin-hspacing, dim, dim, dim, spacing);
-
-    delete tempMesh;
+    
+    //delete tempMesh;
     return true;
-   
+    
 }
+
 
 /*
   Convert the voxel representation of the grid into a mesh for saving to file or render.
@@ -385,15 +390,20 @@ int main(int argc, char **argv)
 
     // Create the grid, set "getLabel" for initial inputfile 
     // TODO: do this for multiple files
+    cout << "voxelizer" << endl;
     voxelizer(argv[1], argv[2], voxelRes, debugLabel);
+    cout << "initialize WF " << endl;
     initializeWF();
+    cout << "propagate" << endl;
     propagate();
     //triangulateVoxelGrid(argv[2], atoi(argv[3]));
+    
+    cout << "output render stuff" << endl;
 
-	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
+	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
-	//ofRunApp( new ofApp());
+	ofRunApp( new ofApp(rMesh, false));
 }
 
