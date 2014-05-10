@@ -173,7 +173,7 @@ bool loadMesh(char *filename, unsigned int dim)
 /*
   Convert the voxel representation of the grid into a mesh for saving to file or render.
 */
-void triangulateVoxelGrid(const char * outfile, int label)
+void triangulateVoxelGrid(const char * outfile, unsigned int label)
 {
     cout << "Trianglulating\n";
 
@@ -196,8 +196,12 @@ void triangulateVoxelGrid(const char * outfile, int label)
                 //if(g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end()){
                 //  continue;
                 //}
-
-                if(g_voxelGrid->getLabels(ii,jj,kk).empty()){
+                
+                std::set<unsigned int>::iterator it = g_voxelGrid->getLabels(ii,jj,kk).find(label);
+                bool is_in = (it != g_voxelGrid->getLabels(ii,jj,kk).end());
+                cout << "is_in: " << is_in << "\n";
+                if(g_voxelGrid->getLabels(ii,jj,kk).empty() || !is_in){
+                  cout << "found label: " << (g_voxelGrid->getLabels(ii,jj,kk).find(label) == g_voxelGrid->getLabels(ii,jj,kk).end()) << "\n";
                   continue;
                 }
                 cout << "final label: " << *g_voxelGrid->getLabels(ii,jj,kk).begin() << "\n";
@@ -413,7 +417,7 @@ int main(int argc, char **argv)
     voxelizer(argv[1], argv[2], voxelRes, debugLabel);
     initializeWF();
     propagate();
-    triangulateVoxelGrid(argv[2], atoi(argv[3]));
+    triangulateVoxelGrid(argv[2], atoi(argv[4]));
 
 	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
