@@ -133,18 +133,18 @@ CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, uns
     m_spacing = spacing;
     
     //  Allocate Memory for wavefront Q: 0 = UNLABELED, otw building id
-    m_labelArray = new unsigned int[m_size];
-    
+    std::vector< std::set<unsigned int> > voxelLabels;
     for(unsigned int ii=0; ii<m_size; ++ii)
     {
-        m_labelArray[ii] = 0;
+        std::set<unsigned int> empty; 
+        voxelLabels.push_back(empty);
+        std::cout << "voxelLabels size initializing..." << voxelLabels.size() << "\n";
     }
     
 }
 
 CompFab::VoxelGridStruct::~VoxelGridStruct()
 {
-    delete[] m_labelArray;
 }
 
 

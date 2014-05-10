@@ -13,8 +13,10 @@
 
 #include <cmath>
 #include <queue>
+#include <set>
 #include <vector>
 #include <utility>
+#include <iostream>
 
 namespace CompFab
 {
@@ -138,13 +140,22 @@ namespace CompFab
         VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, unsigned int dimY, unsigned int dimZ, double spacing);
         ~VoxelGridStruct();
 
-        inline unsigned int & getLabel(unsigned int i, unsigned int j, unsigned int k)
+        std::vector< std::set<unsigned int> > voxelLabels;
+
+        inline std::set<unsigned int> & getLabels(unsigned int i, unsigned int j, unsigned int k)
         {
             
-            return m_labelArray[k*(m_dimX*m_dimY)+j*m_dimY + i];
+            return voxelLabels[k*(m_dimX*m_dimY)+j*m_dimY + i];
+        }
+
+        inline void addLabel(unsigned int i, unsigned int j, unsigned int k, unsigned int label)
+        {
+            std::cout << "voxelLabels.size " << voxelLabels.size() << "\n";
+            std::cout << "trying to set" << k*(m_dimX*m_dimY)+j*m_dimY + i << "\n";
+            voxelLabels[k*(m_dimX*m_dimY)+j*m_dimY + i].insert(label);
         }
         
-        unsigned int *m_labelArray;
+        //unsigned int *m_labelArray;
         std::priority_queue< std::pair<Vec3, Vec3>, std::vector<std::pair<Vec3,Vec3> >, CompareVoxel> wavefront;
         unsigned int m_dimX, m_dimY, m_dimZ, m_size;
         double m_spacing;
