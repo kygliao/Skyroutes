@@ -163,6 +163,7 @@ bool loadMesh(char *filename, unsigned int dim)
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
     
     g_voxelGrid = new CompFab::VoxelGrid(bbMin-hspacing, dim, dim, dim, spacing);
+    g_voxelGrid->initializeLabels();
 
     delete tempMesh;
     return true;
@@ -188,10 +189,18 @@ void triangulateVoxelGrid(const char * outfile, int label)
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                if(g_voxelGrid->getLabels(ii,jj,kk).empty() || 
-                    (g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end())){
+                //if(g_voxelGrid->getLabels(ii,jj,kk).empty() || 
+                //    (g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end())){
+                //  continue;
+                //}
+                //if(g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end()){
+                //  continue;
+                //}
+
+                if(g_voxelGrid->getLabels(ii,jj,kk).empty()){
                   continue;
                 }
+                cout << "final label: " << *g_voxelGrid->getLabels(ii,jj,kk).begin() << "\n";
                 CompFab::Vec3 coord(((double)ii)*spacing, ((double)jj)*spacing, ((double)kk)*spacing);
                 CompFab::Vec3 box0 = coord - hspacing;
                 CompFab::Vec3 box1 = coord + hspacing;
@@ -310,6 +319,12 @@ void propagate(){
        g_voxelGrid->wavefront.pop();
        
        std::set<unsigned int> curr_labels = g_voxelGrid->getLabels(voxel.m_x, voxel.m_y, voxel.m_z);
+       std::cout << "curr_labels size: " << curr_labels.size() << "\n";
+      
+       // For boundary case
+       if(curr_labels.size() > 1){
+            continue; 
+       }
        assert(curr_labels.size() == 1);
        int curr_label;
        if (curr_labels.size() == 1){
@@ -324,8 +339,8 @@ void propagate(){
                for(int k = -1; k <=1; k++)
                {
                    int n_x = (unsigned int)voxel.m_x + i;
-                   int n_y = (unsigned int)voxel.m_x + j;
-                   int n_z = (unsigned int)voxel.m_x + k;
+                   int n_y = (unsigned int)voxel.m_y + j;
+                   int n_z = (unsigned int)voxel.m_z + k;
 
                    std::cout << "Voxel neighbor: " << n_x << " " << n_y << " " << n_z << "\n";
 
@@ -333,7 +348,7 @@ void propagate(){
                    if(!(i == 0 and j == 0 and k == 0))
                    {
                        //Check if coordinates are valid
-                       if( n_x >= 0 and n_x < g_voxelGrid->m_dimX and n_y >= 0 and n_y <= g_voxelGrid->m_dimY and n_z >= 0 and n_z < g_voxelGrid->m_dimZ)
+                       if( (n_x >= 0 and n_x < g_voxelGrid->m_dimX) and (n_y >= 0 and n_y < g_voxelGrid->m_dimY) and (n_z >= 0 and n_z < g_voxelGrid->m_dimZ))
                        {
                            //int n_label = g_voxelGrid->getLabels(n_x, n_y, n_z);
                            //std::cout << "Voxel neighbor original label: " << n_label << "\n";

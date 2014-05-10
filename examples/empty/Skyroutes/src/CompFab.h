@@ -154,6 +154,14 @@ namespace CompFab
             std::cout << "trying to set" << k*(m_dimX*m_dimY)+j*m_dimY + i << "\n";
             voxelLabels[k*(m_dimX*m_dimY)+j*m_dimY + i].insert(label);
         }
+        // Initialize the voxelLabels
+        inline void initializeLabels(){
+            std::set<unsigned int> empty; 
+            for(unsigned int ii=0; ii<m_size; ++ii)
+            {
+                voxelLabels.push_back(empty);
+            }
+        }
         
         //unsigned int *m_labelArray;
         std::priority_queue< std::pair<Vec3, Vec3>, std::vector<std::pair<Vec3,Vec3> >, CompareVoxel> wavefront;
