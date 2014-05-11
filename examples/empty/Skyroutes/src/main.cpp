@@ -185,26 +185,30 @@ void triangulateVoxelGrid(const char * outfile, unsigned int label)
     double spacing = g_voxelGrid->m_spacing;
 
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
+    int num_label1 = 0;
+    int num_label2 = 0;
+    int num_label_both = 0;
 
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                //if(g_voxelGrid->getLabels(ii,jj,kk).empty() || 
-                //    (g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end())){
-                //  continue;
-                //}
-                //if(g_voxelGrid->getLabels(ii,jj,kk).find(label) != g_voxelGrid->getLabels(ii,jj,kk).end()){
-                //  continue;
-                //}
-                
+
                 std::set<unsigned int>::iterator it = g_voxelGrid->getLabels(ii,jj,kk).find(label);
+                std::set<unsigned int>::iterator it1 = g_voxelGrid->getLabels(ii,jj,kk).find(1);
+                std::set<unsigned int>::iterator it2 = g_voxelGrid->getLabels(ii,jj,kk).find(2);
+                bool is_in1 = (it1 != g_voxelGrid->getLabels(ii,jj,kk).end());
+                bool is_in2 = (it2 != g_voxelGrid->getLabels(ii,jj,kk).end());
+                if(is_in1 && is_in2){
+                    num_label_both ++;
+                }else if(is_in1){
+                    num_label1 ++;
+                }else if(is_in2){
+                    num_label2 ++;
+                }
                 bool is_in = (it != g_voxelGrid->getLabels(ii,jj,kk).end());
-                cout << "is_in: " << is_in << "\n";
                 if(g_voxelGrid->getLabels(ii,jj,kk).empty() || !is_in){
-                  cout << "found label: " << (g_voxelGrid->getLabels(ii,jj,kk).find(label) == g_voxelGrid->getLabels(ii,jj,kk).end()) << "\n";
                   continue;
                 }
-                cout << "final label: " << *g_voxelGrid->getLabels(ii,jj,kk).begin() << "\n";
                 CompFab::Vec3 coord(((double)ii)*spacing, ((double)jj)*spacing, ((double)kk)*spacing);
                 CompFab::Vec3 box0 = coord - hspacing;
                 CompFab::Vec3 box1 = coord + hspacing;
@@ -213,6 +217,7 @@ void triangulateVoxelGrid(const char * outfile, unsigned int label)
             }
         }
     }
+    cout << "FINAL COUNTS: label1:" << num_label1 << " label2:" << num_label2 << " both:" << num_label_both << "\n";
     // Compute the normals
     mout.compute_norm();
     mout.save_obj(outfile);
@@ -258,7 +263,8 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
                 testBuildingIntersect(vPos, direction, bIntersect);
                 if(bIntersect[0]){
-                    g_voxelGrid->addLabel(ii,jj,kk,bIntersect[0]);
+                    std::cout << "init label..." << bIntersect[0] << "\n";
+                    g_voxelGrid->addLabel(ii,jj,kk, bIntersect[0]);
                 }
             }
         }
@@ -276,6 +282,9 @@ void initializeWF(){
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
+
+                std::set<unsigned int>::iterator it1 = g_voxelGrid->getLabels(ii,jj,kk).find(1);
+                bool is_in1 = (it1 != g_voxelGrid->getLabels(ii,jj,kk).end());
                 if(!g_voxelGrid->getLabels(ii,jj,kk).empty()){
                    voxel = std::make_pair(CompFab::Vec3(ii, jj, kk),CompFab::Vec3(ii, jj, kk));
                    g_voxelGrid->wavefront.push(voxel);
@@ -283,6 +292,7 @@ void initializeWF(){
             }
         }
     }
+    std::cout << "WAVEFRONT INIT SIZE: " << g_voxelGrid->wavefront.size() << "\n";
 
 
 }
