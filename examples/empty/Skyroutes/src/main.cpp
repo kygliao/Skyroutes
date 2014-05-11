@@ -304,29 +304,27 @@ bool areCoordinatesValid(double x, double y, double z)
 
 //void printWavefront()
 //{
-//    int nx = g_voxelGrid->m_dimX;
-//    int ny = g_voxelGrid->m_dimY;
-//    int nz = g_voxelGrid->m_dimZ;
-//    std::pair <CompFab::Vec3,CompFab::Vec3> voxel;
-//    for (int ii = 0; ii < nx; ii++) {
-//        for (int jj = 0; jj < ny; jj++) {
-//            for (int kk = 0; kk < nz; kk++) {
-//                    //voxel = std::make_pair(CompFab::Vec3(ii, jj, kk),CompFab::Vec3(ii, jj, kk));
-//                    //g_voxelGrid->wavefront.push(voxel);
-//                    std::cout << "\voxel " << ii << ", " << jj << ", " << kk << " has label " << g_voxelGrid->getLabel(ii, jj, kk);
-//            }
-//        }
-//    }
+//   std::priority_queue< std::pair<Vec3, Vec3>, std::vector<std::pair<Vec3,Vec3> >, CompareVoxel> copy;
+//   copy = g_voxelGrid->wavefront;
+//   print "PQ------------------------------------------\n";
+//   while(!copy.empty()){
+//       std::pair <CompFab::Vec3,CompFab::Vec3> voxelPair = g_voxelGrid->wavefront.top();
+//       CompFab::Vec3 voxel = voxelPair.first;
+//       CompFab::Vec3 parent = voxelPair.second;
+//       std::cout << ", (voxel: " << ii << ";" << jj << ";" << kk << " label:" distance: " << CompFab:distance(voxel, parent); << "\n";
+//       g_voxelGrid->wavefront.pop();
+//   }
+//
 //}
 
 ///////////////
 // PROPAGATE //
 ///////////////
 void propagate(){
-    //printWavefront();
-    std::list<CompFab::Vec3> diagram;
+   //std::list<CompFab::Vec3> diagram;
     
    while(!g_voxelGrid->wavefront.empty()){
+       //printWavefront();
        std::pair <CompFab::Vec3,CompFab::Vec3> voxelPair = g_voxelGrid->wavefront.top();
        CompFab::Vec3 voxel = voxelPair.first;
        CompFab::Vec3 parent = voxelPair.second;

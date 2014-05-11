@@ -121,6 +121,12 @@ double CompFab::operator*(const Vec3 &v1, const Vec3 &v2)
     return v1.m_x*v2.m_x + v1.m_y*v2.m_y+v1.m_z*v2.m_z;
 }
 
+double CompFab::distance(Vec3 &v1, Vec3 &v2){
+
+    return sqrt(pow(((double)v1.m_x - (double)v2.m_x),2) + 
+                pow(((double)v1.m_y - (double)v2.m_y),2) + 
+                pow(((double)v1.m_z - (double)v2.m_z),2));
+}
 
 //Grid structure for Voxels
 CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, unsigned int dimY, unsigned int dimZ, double spacing)
