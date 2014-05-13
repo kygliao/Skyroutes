@@ -8,8 +8,10 @@ public:
     ofApp(Mesh* m, bool useVoxel);
     void setupMesh();
     void setupVoxel();
+    void setupBoundary();
     void drawMesh();
     void drawVoxel();
+    void drawBoundary();
     
     void setup();
     void update();
@@ -30,5 +32,6 @@ public:
     ofMesh rendMesh;
     bool useVoxel;
     std::vector< std::vector< ofPoint > > voxObjList;
+    std::vector< ofPoint > boundaryList;
     // a vector of voxel objects. Each object is a vector of cell indices
 };

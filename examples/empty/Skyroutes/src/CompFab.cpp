@@ -121,6 +121,12 @@ double CompFab::operator*(const Vec3 &v1, const Vec3 &v2)
     return v1.m_x*v2.m_x + v1.m_y*v2.m_y+v1.m_z*v2.m_z;
 }
 
+double CompFab::distance(Vec3 &v1, Vec3 &v2){
+
+    return sqrt(pow(((double)v1.m_x - (double)v2.m_x),2) + 
+                pow(((double)v1.m_y - (double)v2.m_y),2) + 
+                pow(((double)v1.m_z - (double)v2.m_z),2));
+}
 
 //Grid structure for Voxels
 CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, unsigned int dimY, unsigned int dimZ, double spacing)
@@ -133,18 +139,18 @@ CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, uns
     m_spacing = spacing;
     
     //  Allocate Memory for wavefront Q: 0 = UNLABELED, otw building id
-    m_labelArray = new unsigned int[m_size];
-    
+    std::vector< std::set<unsigned int> > voxelLabels;
     for(unsigned int ii=0; ii<m_size; ++ii)
     {
-        m_labelArray[ii] = 0;
+        std::set<unsigned int> empty; 
+        voxelLabels.push_back(empty);
+        std::cout << "voxelLabels size initializing..." << voxelLabels.size() << "\n";
     }
     
 }
 
 CompFab::VoxelGridStruct::~VoxelGridStruct()
 {
-    delete[] m_labelArray;
 }
 
 

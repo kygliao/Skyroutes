@@ -35,19 +35,39 @@ void ofApp::setupVoxel(){
     ofPoint lowerleft = ofPoint(g_voxelGrid->m_lowerLeft[0], g_voxelGrid->m_lowerLeft[1], g_voxelGrid->m_lowerLeft[2]);
     double space = g_voxelGrid->m_spacing;
     
-    // TODO: get the number of separate objects
-    // arbitrarily 10 right now...
     for (int i = 0; i < reMesh->numObj; i++){
         voxObjList.push_back(vector< ofPoint >());
     }
     
+    
     for (int ii = 0; ii < g_voxelGrid->m_dimX; ii++){
         for (int jj = 0; jj < g_voxelGrid->m_dimY; jj++){
             for (int kk = 0; kk < g_voxelGrid->m_dimZ; kk++){
-                int label = g_voxelGrid->getLabel(ii,jj,kk);
-                if (label != 0){
+                std::set< unsigned int > label = g_voxelGrid->getLabels(ii,jj,kk);
+                if ((int) label.size() == 1){
                     ofPoint pt = ofPoint(ii*space, jj*space, kk*space) + lowerleft;
-                    voxObjList[label].push_back(pt);
+                    std::set< unsigned int >::iterator it = label.begin();
+                    unsigned int index = *it;
+                    voxObjList[index].push_back(pt);
+                }
+                
+            }
+        }
+    }
+    
+}
+
+void ofApp::setupBoundary(){
+    ofPoint lowerleft = ofPoint(g_voxelGrid->m_lowerLeft[0], g_voxelGrid->m_lowerLeft[1], g_voxelGrid->m_lowerLeft[2]);
+    double space = g_voxelGrid->m_spacing;
+    
+    for (int ii = 0; ii < g_voxelGrid->m_dimX; ii++){
+        for (int jj = 0; jj < g_voxelGrid->m_dimY; jj++){
+            for (int kk = 0; kk < g_voxelGrid->m_dimZ; kk++){
+                std::set< unsigned int > label = g_voxelGrid->getLabels(ii,jj,kk);
+                if (label.size() > 1){
+                    ofPoint pt = ofPoint(ii*space, jj*space, kk*space) + lowerleft;
+                    boundaryList.push_back(pt);
                 }
                 
             }
@@ -57,7 +77,7 @@ void ofApp::setupVoxel(){
 }
 
 void ofApp::drawMesh(){
-    ofSetColor(0, 255, 255);
+    ofSetColor(0, 155, 155);
     rendMesh.drawFaces();
     
     ofSetColor(255,0,0);
@@ -85,6 +105,18 @@ void ofApp::drawVoxel(){
     }
 }
 
+void ofApp::drawBoundary(){
+    double space = g_voxelGrid->m_spacing;
+    ofColor color(0,200,0, 10);
+    ofSetColor(color);
+    
+    for (int i = 0; i < boundaryList.size(); i++){
+        ofPoint loc = boundaryList[i];
+        ofDrawBox(loc, space, space, space);
+    }
+    
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     
@@ -101,16 +133,15 @@ void ofApp::setup(){
     //float a = cam.getDistance();
     //cout << "cam dist = " << a << endl;
     
-    //trying to render the mesh
     
-    //reMesh = getMesh();
+    setupBoundary();
     
     if(useVoxel){
         setupVoxel();
     }
     else{
         setupMesh();
-    }
+    }    
     
 }
 
@@ -145,12 +176,17 @@ void ofApp::draw(){
      ofDrawBox(800, 500, 0, 80, 200, 50);
      */
     
+    
+    
     if(useVoxel){
         drawVoxel();
     }
     else{
         drawMesh();
     }
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    drawBoundary();
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     
     cam.end();

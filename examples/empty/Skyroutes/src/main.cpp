@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cassert>
 #include <vector>
 #include "ofMain.h"
 #include "ofApp.h"
@@ -166,8 +167,9 @@ bool loadMesh(char *filename, unsigned int dim)
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
     
     g_voxelGrid = new CompFab::VoxelGrid(bbMin-hspacing, dim, dim, dim, spacing);
-    
-    //delete tempMesh;
+
+    g_voxelGrid->initializeLabels();
+
     return true;
     
 }
@@ -176,7 +178,7 @@ bool loadMesh(char *filename, unsigned int dim)
 /*
   Convert the voxel representation of the grid into a mesh for saving to file or render.
 */
-void triangulateVoxelGrid(const char * outfile, int label)
+void triangulateVoxelGrid(const char * outfile, unsigned int label)
 {
     cout << "Trianglulating\n";
 
@@ -188,12 +190,28 @@ void triangulateVoxelGrid(const char * outfile, int label)
     double spacing = g_voxelGrid->m_spacing;
 
     CompFab::Vec3 hspacing(0.5*spacing, 0.5*spacing, 0.5*spacing);
+    int num_label1 = 0;
+    int num_label2 = 0;
+    int num_label_both = 0;
 
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                if(!g_voxelGrid->getLabel(ii,jj,kk) || 
-                    (g_voxelGrid->getLabel(ii,jj,kk) != label)){
+
+                std::set<unsigned int>::iterator it = g_voxelGrid->getLabels(ii,jj,kk).find(label);
+                std::set<unsigned int>::iterator it1 = g_voxelGrid->getLabels(ii,jj,kk).find(1);
+                std::set<unsigned int>::iterator it2 = g_voxelGrid->getLabels(ii,jj,kk).find(2);
+                bool is_in1 = (it1 != g_voxelGrid->getLabels(ii,jj,kk).end());
+                bool is_in2 = (it2 != g_voxelGrid->getLabels(ii,jj,kk).end());
+                if(is_in1 && is_in2){
+                    num_label_both ++;
+                }else if(is_in1){
+                    num_label1 ++;
+                }else if(is_in2){
+                    num_label2 ++;
+                }
+                bool is_in = (it != g_voxelGrid->getLabels(ii,jj,kk).end());
+                if(g_voxelGrid->getLabels(ii,jj,kk).empty() || !is_in){
                   continue;
                 }
                 CompFab::Vec3 coord(((double)ii)*spacing, ((double)jj)*spacing, ((double)kk)*spacing);
@@ -204,6 +222,7 @@ void triangulateVoxelGrid(const char * outfile, int label)
             }
         }
     }
+    cout << "FINAL COUNTS: label1:" << num_label1 << " label2:" << num_label2 << " both:" << num_label_both << "\n";
     // Compute the normals
     mout.compute_norm();
     mout.save_obj(outfile);
@@ -249,7 +268,8 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
                 testBuildingIntersect(vPos, direction, bIntersect);
                 if(bIntersect[0]){
-                    g_voxelGrid->getLabel(ii,jj,kk) = bIntersect[0];
+                    std::cout << "init label..." << bIntersect[0] << "\n";
+                    g_voxelGrid->addLabel(ii,jj,kk, bIntersect[0]);
                 }
             }
         }
@@ -267,13 +287,17 @@ void initializeWF(){
     for (int ii = 0; ii < nx; ii++) {
         for (int jj = 0; jj < ny; jj++) {
             for (int kk = 0; kk < nz; kk++) {
-                if(g_voxelGrid->getLabel(ii,jj,kk)){
+
+                std::set<unsigned int>::iterator it1 = g_voxelGrid->getLabels(ii,jj,kk).find(1);
+                bool is_in1 = (it1 != g_voxelGrid->getLabels(ii,jj,kk).end());
+                if(!g_voxelGrid->getLabels(ii,jj,kk).empty()){
                    voxel = std::make_pair(CompFab::Vec3(ii, jj, kk),CompFab::Vec3(ii, jj, kk));
                    g_voxelGrid->wavefront.push(voxel);
                 }
             }
         }
     }
+    std::cout << "WAVEFRONT INIT SIZE: " << g_voxelGrid->wavefront.size() << "\n";
 
 
 }
@@ -285,35 +309,45 @@ bool areCoordinatesValid(double x, double y, double z)
 
 //void printWavefront()
 //{
-//    int nx = g_voxelGrid->m_dimX;
-//    int ny = g_voxelGrid->m_dimY;
-//    int nz = g_voxelGrid->m_dimZ;
-//    std::pair <CompFab::Vec3,CompFab::Vec3> voxel;
-//    for (int ii = 0; ii < nx; ii++) {
-//        for (int jj = 0; jj < ny; jj++) {
-//            for (int kk = 0; kk < nz; kk++) {
-//                    //voxel = std::make_pair(CompFab::Vec3(ii, jj, kk),CompFab::Vec3(ii, jj, kk));
-//                    //g_voxelGrid->wavefront.push(voxel);
-//                    std::cout << "\voxel " << ii << ", " << jj << ", " << kk << " has label " << g_voxelGrid->getLabel(ii, jj, kk);
-//            }
-//        }
-//    }
+//   std::priority_queue< std::pair<Vec3, Vec3>, std::vector<std::pair<Vec3,Vec3> >, CompareVoxel> copy;
+//   copy = g_voxelGrid->wavefront;
+//   print "PQ------------------------------------------\n";
+//   while(!copy.empty()){
+//       std::pair <CompFab::Vec3,CompFab::Vec3> voxelPair = g_voxelGrid->wavefront.top();
+//       CompFab::Vec3 voxel = voxelPair.first;
+//       CompFab::Vec3 parent = voxelPair.second;
+//       std::cout << ", (voxel: " << ii << ";" << jj << ";" << kk << " label:" distance: " << CompFab:distance(voxel, parent); << "\n";
+//       g_voxelGrid->wavefront.pop();
+//   }
+//
 //}
 
 ///////////////
 // PROPAGATE //
 ///////////////
 void propagate(){
-    //printWavefront();
-    std::list<CompFab::Vec3> diagram;
+   //std::list<CompFab::Vec3> diagram;
     
    while(!g_voxelGrid->wavefront.empty()){
+       //printWavefront();
        std::pair <CompFab::Vec3,CompFab::Vec3> voxelPair = g_voxelGrid->wavefront.top();
        CompFab::Vec3 voxel = voxelPair.first;
        CompFab::Vec3 parent = voxelPair.second;
        g_voxelGrid->wavefront.pop();
        
-       int curr_label = g_voxelGrid->getLabel(voxel.m_x, voxel.m_y, voxel.m_z);
+       std::set<unsigned int> curr_labels = g_voxelGrid->getLabels(voxel.m_x, voxel.m_y, voxel.m_z);
+       std::cout << "curr_labels size: " << curr_labels.size() << "\n";
+      
+       // For boundary case
+       if(curr_labels.size() > 1){
+            continue; 
+       }
+       assert(curr_labels.size() == 1);
+       int curr_label;
+       if (curr_labels.size() == 1){
+        curr_label = *curr_labels.begin();
+       }
+       assert(curr_label != 0);
        std::cout << "Curr Voxel: " << voxel.m_x << " " << voxel.m_y << " " << voxel.m_z << " has label " <<  curr_label << "\n";
        for(int i = -1; i <=1; i++)
        {
@@ -322,8 +356,8 @@ void propagate(){
                for(int k = -1; k <=1; k++)
                {
                    int n_x = (unsigned int)voxel.m_x + i;
-                   int n_y = (unsigned int)voxel.m_x + j;
-                   int n_z = (unsigned int)voxel.m_x + k;
+                   int n_y = (unsigned int)voxel.m_y + j;
+                   int n_z = (unsigned int)voxel.m_z + k;
 
                    std::cout << "Voxel neighbor: " << n_x << " " << n_y << " " << n_z << "\n";
 
@@ -331,20 +365,23 @@ void propagate(){
                    if(!(i == 0 and j == 0 and k == 0))
                    {
                        //Check if coordinates are valid
-                       if( n_x >= 0 and n_x < g_voxelGrid->m_dimX and n_y >= 0 and n_y <= g_voxelGrid->m_dimY and n_z >= 0 and n_z < g_voxelGrid->m_dimZ)
+                       if( (n_x >= 0 and n_x < g_voxelGrid->m_dimX) and (n_y >= 0 and n_y < g_voxelGrid->m_dimY) and (n_z >= 0 and n_z < g_voxelGrid->m_dimZ))
                        {
-                           int n_label = g_voxelGrid->getLabel(n_x, n_y, n_z);
-                           std::cout << "Voxel neighbor original label: " << n_label << "\n";
+                           //int n_label = g_voxelGrid->getLabels(n_x, n_y, n_z);
+                           //std::cout << "Voxel neighbor original label: " << n_label << "\n";
                            //Check if unlabelled
-                           if(g_voxelGrid->getLabel(n_x, n_y, n_z) == 0)
+                           if(g_voxelGrid->getLabels(n_x, n_y, n_z).empty())
                            {
                                std::cout << "Valid: ";
                                //Assign it the new label
-                               g_voxelGrid->getLabel(n_x,n_y,n_z) = curr_label;
+                               g_voxelGrid->addLabel(n_x,n_y,n_z,curr_label);
                                std::cout << "setting label to " << curr_label << "\n";
                                std::pair <CompFab::Vec3,CompFab::Vec3> newVoxel;
                                newVoxel = std::make_pair(CompFab::Vec3(n_x, n_y, n_z), parent);
                                g_voxelGrid->wavefront.push(newVoxel);
+                           } else {
+                               //TODO: add to voronoi diagram
+                               g_voxelGrid->addLabel(n_x,n_y,n_z,curr_label);
                            }
                        } else {
                          std::cout << "Invalid" << "\n";
@@ -396,9 +433,8 @@ int main(int argc, char **argv)
     initializeWF();
     cout << "propagate" << endl;
     propagate();
-    //triangulateVoxelGrid(argv[2], atoi(argv[3]));
-    
     cout << "output render stuff" << endl;
+    triangulateVoxelGrid(argv[2], atoi(argv[4]));
 
 	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
