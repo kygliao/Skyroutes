@@ -2,6 +2,7 @@ libs/
 scripts/
 docs/
 other/
+export/
 examples/empty/Skyroutes/bin/
 examples/empty/Skyroutes/obj/
 examples/empty/Skyroutes/data/output/
@@ -16,6 +17,9 @@ examples/utils/
 *.user
 *.rc
 *.vcxproj
+*.md
+
+*.DS_Store
 
 *.cpb
 *.make
