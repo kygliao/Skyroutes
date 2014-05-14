@@ -223,7 +223,7 @@ void ofApp::setup(){
     ptDest = lowerleft + ofPoint(g_voxelGrid->m_dimX*space, g_voxelGrid->m_dimY*space*.5, g_voxelGrid->m_dimZ*space*.6);
     ptVehicle = ptStart;
     
-    guiPanel.setup();
+    //guiPanel.setup();
     
 }
 

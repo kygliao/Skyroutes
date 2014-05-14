@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxGui.h"
+//#include "ofxGui.h"
 #include "Mesh.h"
 
 class ofApp : public ofBaseApp{
@@ -45,6 +45,6 @@ public:
     ofPoint ptVehicle;
     double space;
     
-    ofxPanel guiPanel;
+    //ofxPanel guiPanel;
     
 };
