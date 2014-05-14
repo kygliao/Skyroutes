@@ -144,7 +144,7 @@ CompFab::VoxelGridStruct::VoxelGridStruct(Vec3 lowerLeft, unsigned int dimX, uns
     {
         std::set<unsigned int> empty; 
         voxelLabels.push_back(empty);
-        std::cout << "voxelLabels size initializing..." << voxelLabels.size() << "\n";
+        //std::cout << "voxelLabels size initializing..." << voxelLabels.size() << "\n";
     }
     
 }

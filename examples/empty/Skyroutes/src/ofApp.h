@@ -1,17 +1,20 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxGui.h"
 #include "Mesh.h"
 
 class ofApp : public ofBaseApp{
 public:
-    ofApp(Mesh* m, bool useVoxel);
+    ofApp(Mesh* m, bool useVoxel, std::vector< CompFab::Vec3 > path);
     void setupMesh();
     void setupVoxel();
     void setupBoundary();
+    void setupPath();
     void drawMesh();
     void drawVoxel();
     void drawBoundary();
+    void drawPath();
     
     void setup();
     void update();
@@ -30,8 +33,18 @@ public:
     ofEasyCam cam;
     Mesh *reMesh;
     ofMesh rendMesh;
-    bool useVoxel;
-    std::vector< std::vector< ofPoint > > voxObjList;
+    bool showPath;
+    std::vector< CompFab::Vec3 > pathCells;
+    std::vector< std::vector< ofPoint > > voxObjList;// a vector of voxel objects. Each object is a vector of cell indices
     std::vector< ofPoint > boundaryList;
-    // a vector of voxel objects. Each object is a vector of cell indices
+    std::vector< ofPoint > pathList;
+    
+    ofPoint lowerleft;
+    ofPoint ptStart;
+    ofPoint ptDest;
+    ofPoint ptVehicle;
+    double space;
+    
+    ofxPanel guiPanel;
+    
 };

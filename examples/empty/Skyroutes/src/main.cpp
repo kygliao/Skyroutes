@@ -6,10 +6,10 @@
 #include <sstream>
 #include <iomanip>
 #include <cassert>
-#include <vector>
-#include "ofMain.h"
+//#include <vector>
+//#include "ofMain.h"
 #include "ofApp.h"
-#include "CompFab.h"
+//#include "CompFab.h"
 //#include "Mesh.h"
 #include "vecmath/vecmath.h"
 using namespace std;
@@ -24,6 +24,9 @@ using std::ends;
 
 // The grid representation 
 CompFab::VoxelGrid *g_voxelGrid;
+
+//The Voronoi Diagram
+std::vector<CompFab::Vec3> diagram;
 
 // Triangles used for initializing labels;
 typedef std::vector<CompFab::Triangle> TriangleList;
@@ -268,7 +271,7 @@ void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigne
                 CompFab::Vec3 vPos(left.m_x + ((double)ii)*spacing, left.m_y + ((double)jj)*spacing, left.m_z +((double)kk)*spacing);
                 testBuildingIntersect(vPos, direction, bIntersect);
                 if(bIntersect[0]){
-                    std::cout << "init label..." << bIntersect[0] << "\n";
+                    //std::cout << "init label..." << bIntersect[0] << "\n";
                     g_voxelGrid->addLabel(ii,jj,kk, bIntersect[0]);
                 }
             }
@@ -336,7 +339,7 @@ void propagate(){
        g_voxelGrid->wavefront.pop();
        
        std::set<unsigned int> curr_labels = g_voxelGrid->getLabels(voxel.m_x, voxel.m_y, voxel.m_z);
-       std::cout << "curr_labels size: " << curr_labels.size() << "\n";
+       //std::cout << "curr_labels size: " << curr_labels.size() << "\n";
       
        // For boundary case
        if(curr_labels.size() > 1){
@@ -348,7 +351,7 @@ void propagate(){
         curr_label = *curr_labels.begin();
        }
        assert(curr_label != 0);
-       std::cout << "Curr Voxel: " << voxel.m_x << " " << voxel.m_y << " " << voxel.m_z << " has label " <<  curr_label << "\n";
+       ///std::cout << "Curr Voxel: " << voxel.m_x << " " << voxel.m_y << " " << voxel.m_z << " has label " <<  curr_label << "\n";
        for(int i = -1; i <=1; i++)
        {
            for(int j = -1; j <=1; j++)
@@ -359,7 +362,7 @@ void propagate(){
                    int n_y = (unsigned int)voxel.m_y + j;
                    int n_z = (unsigned int)voxel.m_z + k;
 
-                   std::cout << "Voxel neighbor: " << n_x << " " << n_y << " " << n_z << "\n";
+                   //std::cout << "Voxel neighbor: " << n_x << " " << n_y << " " << n_z << "\n";
 
                    //If same square as before don't propegate
                    if(!(i == 0 and j == 0 and k == 0))
@@ -372,19 +375,23 @@ void propagate(){
                            //Check if unlabelled
                            if(g_voxelGrid->getLabels(n_x, n_y, n_z).empty())
                            {
-                               std::cout << "Valid: ";
+                               //std::cout << "Valid: ";
                                //Assign it the new label
                                g_voxelGrid->addLabel(n_x,n_y,n_z,curr_label);
-                               std::cout << "setting label to " << curr_label << "\n";
+                               //std::cout << "setting label to " << curr_label << "\n";
                                std::pair <CompFab::Vec3,CompFab::Vec3> newVoxel;
                                newVoxel = std::make_pair(CompFab::Vec3(n_x, n_y, n_z), parent);
                                g_voxelGrid->wavefront.push(newVoxel);
                            } else {
-                               //TODO: add to voronoi diagram
-                               g_voxelGrid->addLabel(n_x,n_y,n_z,curr_label);
+                               if(curr_label != *g_voxelGrid->getLabels(n_x,n_y,n_z).begin())
+                               {
+                                   diagram.push_back(CompFab::Vec3(n_x, n_y, n_z));
+                                   g_voxelGrid->addLabel(n_x,n_y,n_z,curr_label);
+                                   //cout << "label count: " << g_voxelGrid->getLabels(n_x,n_y,n_z).size() << "\n";
+                               }
                            }
                        } else {
-                         std::cout << "Invalid" << "\n";
+                         //std::cout << "Invalid" << "\n";
                        }
                    }
                }
@@ -395,6 +402,103 @@ void propagate(){
    }
    std::cout << "\nfinished propegation\n";
 }
+
+//find closest voxel to each point
+//TODO check if path goes through building, if so search neighbors to find better path
+//do a search of neighbors (check all neighbors, check if on boundary ie have 2 labels, then do BFS
+//returns a vector of the voxels on the boundary
+vector<CompFab::Vec3> findPath(CompFab::Vec3 a, CompFab::Vec3 b)
+{
+    int nx = g_voxelGrid->m_dimX;
+    int ny = g_voxelGrid->m_dimY;
+    int nz = g_voxelGrid->m_dimZ;
+    
+    //Find closest point to a (start) and b (end)
+    //TODO update to check if path intersects a building?
+    CompFab::Vec3 start;
+    CompFab::Vec3 end;
+    double minDistStart = -1.0;
+    double minDistEnd = -1.0;
+    for(int i = 0; i < diagram.size(); i++) {
+        if(minDistStart < 0 || CompFab::distance(diagram[i], a) < minDistStart)
+        {
+            start = diagram[i];
+            minDistStart = CompFab::distance(diagram[i], a);
+        }
+        if(minDistEnd < 0 || CompFab::distance(diagram[i], b) < minDistEnd)
+        {
+            end = diagram[i];
+            minDistEnd = CompFab::distance(diagram[i], b);
+        }
+    }
+    
+    cout << "start: " << start.m_x << " " << start.m_y << " " << start.m_z << "\n";
+    cout << "start label count: " << g_voxelGrid->getLabels(start.m_x,start.m_y,start.m_z).size() << "\n";
+    cout << "end: " << end.m_x << " " << end.m_y << " " << end.m_z << "\n";
+    cout << "end label count: " << g_voxelGrid->getLabels(end.m_x,end.m_y,end.m_z).size() << "\n";
+    
+    //Find path from start to end
+    vector<CompFab::Vec3> path;
+    queue<CompFab::Vec3> queue;
+    std::map<int, CompFab::Vec3> visited;
+    
+    queue.push(start);
+    visited[(start.m_x*(nx*ny) + start.m_y*(nz) + start.m_z)] = start;
+    while(!queue.empty())
+    {
+        CompFab::Vec3 current = queue.front();
+        queue.pop();
+        //cout << "checking node: " << current.m_x << " " << current.m_y << " " << current.m_z << "\n";
+        
+        //found end point
+        if((unsigned int)end.m_x == current.m_x && (unsigned int)end.m_y == current.m_y && (unsigned int)end.m_z == current.m_z)
+        {
+            //cout << "found end\n";
+            //loop through parents and add to path
+            CompFab::Vec3 node = end;
+            while (node.m_x != start.m_x || node.m_y != start.m_y || node.m_z != start.m_z)
+            {
+                //cout << "adding node to path: " << node.m_x << " " << node.m_y << " " << node.m_z << "\n";
+                path.insert(path.begin(), node);
+                node = visited.at(node.m_x*(nx*ny) + node.m_y*(nz) + node.m_z); //gets the parent of node
+            }
+            return path;
+        }
+        
+        //check all neighbors
+        for(int i = -1; i <=1; i++)
+        {
+            for(int j = -1; j <=1; j++)
+            {
+                for(int k = -1; k <=1; k++)
+                {
+                    int x = (unsigned int)current.m_x + i;
+                    int y = (unsigned int)current.m_y + j;
+                    int z = (unsigned int)current.m_z + k;
+                    
+                    //TODO replace visited with set
+                    map<int,CompFab::Vec3>::iterator it = visited.find(x*(nx*ny) + y*(nz) + z);
+                    //If not already in visited and not same square as before and on the grid
+                    //cout << "nz: " << nz << "z: " << z << "\n";
+                    if(it == visited.end() && !(i == 0 && j == 0 && k == 0) && ((x >= 0 && x < nx) and (y >= 0 and y < ny) and (z >= 0 and z < nz)))
+                    {
+                        //If on boundary, ie has >1 label
+                        if(g_voxelGrid->getLabels(x,y,z).size() > 1)
+                        {
+                            queue.push(CompFab::Vec3(x,y,z));
+                            //visited.insert(pair<CompFab::Vec3, CompFab::Vec3>(CompFab::Vec3(x,y,z), current));
+                            //visited.insert(std::map<CompFab::Vec3, CompFab::Vec3>::value_type(CompFab::Vec3(x,y,z), current));
+                            visited[(x*(nx*ny) + y*(nz) + z)] = current;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return path;
+}
+
 
 ///////////////
 // RENDERING //
@@ -407,7 +511,9 @@ void propagate(){
 
 int main(int argc, char **argv)
 {
-
+    std::clock_t prerend;
+    prerend = std::clock();
+    
     if(argc < 4)
     {
         std::cout<<"Usage: InputMeshFilename OutputMeshFilename voxelRes building\n";
@@ -427,19 +533,37 @@ int main(int argc, char **argv)
 
     // Create the grid, set "getLabel" for initial inputfile 
     // TODO: do this for multiple files
-    cout << "voxelizer" << endl;
     voxelizer(argv[1], argv[2], voxelRes, debugLabel);
-    cout << "initialize WF " << endl;
     initializeWF();
-    cout << "propagate" << endl;
+    
+    std::clock_t preprop;
+    preprop = std::clock();
     propagate();
-    cout << "output render stuff" << endl;
-    triangulateVoxelGrid(argv[2], atoi(argv[4]));
-
+    
+    std::clock_t prepath;
+    prepath = std::clock();
+    
+    //triangulateVoxelGrid(argv[2], atoi(argv[4]));
+    
+    cout << "starting path finding" << endl;
+    std::vector< CompFab::Vec3 > path = findPath(CompFab::Vec3(0,0,0), CompFab::Vec3(voxelRes,voxelRes/2,(int)(voxelRes*.6)));
+    cout << "finished path finding" << endl;
+    
+    
+    
+    cout << "render time = " << (preprop - prerend) / (double) CLOCKS_PER_SEC << endl;
+    cout << "propagation time = " << (prepath - preprop) / (double) CLOCKS_PER_SEC << endl;
+    cout << "path calculation time = " << (std::clock() - prepath) / (double) CLOCKS_PER_SEC << endl;
+    cout << "total time = " << (std::clock() - prerend) / (double) CLOCKS_PER_SEC << endl;
+    //TODO: the is temporary. Remove it later
+    //std::vector< CompFab::Vec3 > *path = new std::vector< CompFab::Vec3 >();
+    
 	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
-	ofRunApp( new ofApp(rMesh, false));
+	ofRunApp( new ofApp(rMesh, true, path));
+    
+    
 }
 

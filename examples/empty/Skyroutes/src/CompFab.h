@@ -147,8 +147,8 @@ namespace CompFab
 
         inline void addLabel(unsigned int i, unsigned int j, unsigned int k, unsigned int label)
         {
-            std::cout << "voxelLabels.size " << voxelLabels.size() << "\n";
-            std::cout << "trying to set" << k*(m_dimX*m_dimY)+j*m_dimY + i << "\n";
+            //std::cout << "voxelLabels.size " << voxelLabels.size() << "\n";
+            //std::cout << "trying to set" << k*(m_dimX*m_dimY)+j*m_dimY + i << "\n";
             voxelLabels[k*(m_dimX*m_dimY)+j*m_dimY + i].insert(label);
         }
         // Initialize the voxelLabels
