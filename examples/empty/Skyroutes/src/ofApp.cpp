@@ -36,7 +36,6 @@ void ofApp::setupVoxel(){
         voxObjList.push_back(vector< ofPoint >());
     }
     
-    
     for (int ii = 0; ii < g_voxelGrid->m_dimX; ii++){
         for (int jj = 0; jj < g_voxelGrid->m_dimY; jj++){
             for (int kk = 0; kk < g_voxelGrid->m_dimZ; kk++){
@@ -149,7 +148,6 @@ void ofApp::setup(){
     ptDest = lowerleft + ofPoint(g_voxelGrid->m_dimX*space, g_voxelGrid->m_dimY*space*.5, g_voxelGrid->m_dimZ*space*.6);
     ptVehicle = ptStart;
     
-    //guiPanel.setup();
     
 }
 

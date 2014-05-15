@@ -45,6 +45,4 @@ public:
     ofPoint ptVehicle;
     double space;
     
-    //ofxPanel guiPanel;
-    
 };

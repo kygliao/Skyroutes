@@ -236,7 +236,7 @@ void triangulateVoxelGrid(const char * outfile, unsigned int label)
   @sets g_voxelgrid
   TODO: do this for multiple objects
 */
-void voxelizer(char* filename, char* outfilename, unsigned int voxelres, unsigned int label) 
+void voxelizer(char* filename, unsigned int voxelres, unsigned int label)
 {
 
     unsigned int dim = voxelres; //dimension of voxel grid (e.g. 32x32x32)
@@ -514,26 +514,23 @@ int main(int argc, char **argv)
     std::clock_t prerend;
     prerend = std::clock();
     
-    if(argc < 4)
+    if(argc < 3)
     {
-        std::cout<<"Usage: InputMeshFilename OutputMeshFilename voxelRes building\n";
+        std::cout<<"Usage: InputMeshFilename voxelRes \n";
         exit(0);
     }
     std::cout<<"Load Mesh file: "<<argv[1]<<"\n";
-    std::cout<<"Output Mesh file: "<<argv[2]<<"\n";
-    std::cout<<"Grid resolution : "<<argv[3]<<"\n";
+    std::cout<<"Grid resolution : "<<argv[2]<<"\n";
 
     int debugLabel = 1;
-    if(argc == 5) {
-        std::cout<<"Building label : "<<argv[4]<<"\n";
-        debugLabel = atoi(argv[4]);
+    if(argc == 4) {
+        std::cout<<"Building label : "<<argv[3]<<"\n";
+        debugLabel = atoi(argv[3]);
     }
 
-    voxelRes = atoi(argv[3]);
+    voxelRes = atoi(argv[2]);
 
-    // Create the grid, set "getLabel" for initial inputfile 
-    // TODO: do this for multiple files
-    voxelizer(argv[1], argv[2], voxelRes, debugLabel);
+    voxelizer(argv[1], voxelRes, debugLabel);
     initializeWF();
     
     std::clock_t preprop;
@@ -542,8 +539,6 @@ int main(int argc, char **argv)
     
     std::clock_t prepath;
     prepath = std::clock();
-    
-    //triangulateVoxelGrid(argv[2], atoi(argv[4]));
     
     cout << "starting path finding" << endl;
     std::vector< CompFab::Vec3 > path = findPath(CompFab::Vec3(0,0,0), CompFab::Vec3(voxelRes,voxelRes/2,(int)(voxelRes*.6)));
@@ -555,8 +550,6 @@ int main(int argc, char **argv)
     cout << "propagation time = " << (prepath - preprop) / (double) CLOCKS_PER_SEC << endl;
     cout << "path calculation time = " << (std::clock() - prepath) / (double) CLOCKS_PER_SEC << endl;
     cout << "total time = " << (std::clock() - prerend) / (double) CLOCKS_PER_SEC << endl;
-    //TODO: the is temporary. Remove it later
-    //std::vector< CompFab::Vec3 > *path = new std::vector< CompFab::Vec3 >();
     
 	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
