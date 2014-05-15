@@ -26,7 +26,6 @@ void ofApp::setupMesh(){
         rendMesh.addIndex(reMesh->t[k][0]);
         rendMesh.addIndex(reMesh->t[k][1]);
         rendMesh.addIndex(reMesh->t[k][2]);
-        
     }
     
 }
@@ -36,7 +35,6 @@ void ofApp::setupVoxel(){
         voxObjList.push_back(vector< ofPoint >());
     }
     
-    
     for (int ii = 0; ii < g_voxelGrid->m_dimX; ii++){
         for (int jj = 0; jj < g_voxelGrid->m_dimY; jj++){
             for (int kk = 0; kk < g_voxelGrid->m_dimZ; kk++){
@@ -45,7 +43,7 @@ void ofApp::setupVoxel(){
                     ofPoint pt = ofPoint(ii*space, jj*space, kk*space) + lowerleft;
                     std::set< unsigned int >::iterator it = label.begin();
                     unsigned int index = *it;
-                    voxObjList[index].push_back(pt);
+                    voxObjList[index-1].push_back(pt);
                 }
                 
             }
@@ -119,7 +117,7 @@ void ofApp::drawBoundary(){
 }
 
 void ofApp::drawPath(){
-    ofSetColor(200, 200, 0, 80);
+    ofSetColor(200, 0, 0, 80);
     
     for (int i = 0; i < pathList.size(); i++){
         ofDrawBox(pathList[i], space, space, space);
@@ -137,8 +135,9 @@ void ofApp::setup(){
     space = g_voxelGrid->m_spacing;
     lowerleft = ofPoint(g_voxelGrid->m_lowerLeft[0], g_voxelGrid->m_lowerLeft[1], g_voxelGrid->m_lowerLeft[2]);
     
-    setupBoundary();
-    setupMesh();
+    //setupBoundary();
+    //setupMesh();
+    setupVoxel();
     if(showPath){
         setupPath();
     }
@@ -165,13 +164,13 @@ void ofApp::draw(){
     
     ofBackground(231,214,224);
     
-    drawMesh();
-    
+    //drawMesh();
+    drawVoxel();
     if(showPath){
         drawPath();
     }
     
-    drawBoundary();
+    //drawBoundary();
     
     ofSetColor(200, 0, 150, 50);
     ofDrawSphere(ptStart, 1);

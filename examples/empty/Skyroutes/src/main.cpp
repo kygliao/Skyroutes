@@ -538,7 +538,7 @@ int main(int argc, char **argv)
     
     std::clock_t preprop;
     preprop = std::clock();
-    propagate();
+    //propagate();
     
     std::clock_t prepath;
     prepath = std::clock();
@@ -546,23 +546,22 @@ int main(int argc, char **argv)
     //triangulateVoxelGrid(argv[2], atoi(argv[4]));
     
     cout << "starting path finding" << endl;
-    std::vector< CompFab::Vec3 > path = findPath(CompFab::Vec3(0,0,0), CompFab::Vec3(voxelRes,voxelRes/2,(int)(voxelRes*.6)));
+    std::vector< CompFab::Vec3 > path; // = findPath(CompFab::Vec3(0,0,0), CompFab::Vec3(voxelRes,voxelRes/2,(int)(voxelRes*.6)));
     cout << "finished path finding" << endl;
     
     
-    
+    // looking at how fast things take...
     cout << "render time = " << (preprop - prerend) / (double) CLOCKS_PER_SEC << endl;
     cout << "propagation time = " << (prepath - preprop) / (double) CLOCKS_PER_SEC << endl;
     cout << "path calculation time = " << (std::clock() - prepath) / (double) CLOCKS_PER_SEC << endl;
     cout << "total time = " << (std::clock() - prerend) / (double) CLOCKS_PER_SEC << endl;
-    //TODO: the is temporary. Remove it later
-    //std::vector< CompFab::Vec3 > *path = new std::vector< CompFab::Vec3 >();
+    
     
 	ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:
-	ofRunApp( new ofApp(rMesh, true, path));
+	ofRunApp( new ofApp(rMesh, false, path));
     
     
 }
