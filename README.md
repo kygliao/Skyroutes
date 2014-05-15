@@ -3,4 +3,6 @@ Skyroutes
 
 6.850 final project
 
-./bin/Skyroutes ./data/input/city1.obj ./data/output/cityout.obj 20 
+To run the code, use the following arguments:
+
+./bin/Skyroutes ./data/input/cityblend.obj 40 
